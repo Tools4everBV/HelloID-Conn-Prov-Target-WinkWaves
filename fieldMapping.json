@@ -1,0 +1,57 @@
+{
+  "Version": "v1",
+  "MappingFields": [
+    {
+      "Name": "displayName",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.DisplayName\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "email",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Complex",
+          "Value": "\"function getEmail() {\\r\\n    let mail = '';\\r\\n    if (typeof Person.Accounts.MicrosoftActiveDirectory.mail !== 'undefined' && Person.Accounts.MicrosoftActiveDirectory.mail) {\\r\\n        mail = Person.Accounts.MicrosoftActiveDirectory.mail;\\r\\n    }\\r\\n    return mail;\\r\\n}\\r\\ngetEmail()\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "userName",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Complex",
+          "Value": "\"function getEmail() {\\r\\n    let mail = '';\\r\\n    if (typeof Person.Accounts.MicrosoftActiveDirectory.userPrincipalName !== 'undefined' && Person.Accounts.MicrosoftActiveDirectory.userPrincipalName) {\\r\\n        mail = Person.Accounts.MicrosoftActiveDirectory.userPrincipalName;\\r\\n    }\\r\\n    return mail;\\r\\n}\\r\\ngetEmail()\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    }
+  ],
+  "UniqueFieldNames": []
+}
