@@ -32,8 +32,20 @@ function Resolve-WinkWavesError {
             }
         }
         try {
-            $errorDetailsMessage = ($httpErrorObj.ErrorDetails | ConvertFrom-Json).error
-            $httpErrorObj.FriendlyMessage = $errorDetailsObject
+            $errorDetailsMessage = ($httpErrorObj.ErrorDetails | ConvertFrom-Json)
+            if ($null -ne $errorDetailsMessage.details) {
+                $errorDetailsMessage = ($httpErrorObj.ErrorDetails | ConvertFrom-Json)
+                $messages = [System.Collections.Generic.List[string]]::new()
+                foreach ($key in $errorDetailsMessage.details.PSObject.Properties.Name) {
+                    $value = $errorDetailsMessage.details."$key"
+                    if ($value.errors) {
+                        $messages.Add($value.errors)
+                    }
+                }
+                $httpErrorObj.FriendlyMessage = ($messages | ConvertTo-Json)
+            } else {
+                $httpErrorObj.FriendlyMessage = $errorDetailsObject
+            }
         } catch {
             $httpErrorObj.FriendlyMessage = "Error: [$($errorDetailsMessage)] [$($_.Exception.Message)]"
         }
