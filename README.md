@@ -36,13 +36,13 @@ _HelloID-Conn-Prov-Target-WinkWaves_ is a _target_ connector. _WinkWaves_ provid
 
 The following features are available:
 
-| Feature                             | Supported | Actions                                 | Remarks |
-| ----------------------------------- | --------- | --------------------------------------- | ------- |
-| **Account Lifecycle**               | ✅         | Create, Update, Enable, Disable, Delete |         |
-| **Permissions**                     | ✅         | -                                       |         |
-| **Resources**                       | ❌         | -                                       |         |
-| **Entitlement Import: Accounts**    | ✅         | -                                       |         |
-| **Entitlement Import: Permissions** | ❌         | -                                       |         |
+| Feature                             | Supported | Actions                         | Remarks                                                      |
+| ----------------------------------- | --------- | ------------------------------- | ------------------------------------------------------------ |
+| **Account Lifecycle**               | ✅         | Create, Update, Enable, Disable |                                                              |
+| **Permissions**                     | ✅         | -                               |                                                              |
+| **Resources**                       | ❌         | -                               |                                                              |
+| **Entitlement Import: Accounts**    | ❌         | -                               | Not supported because in-active accounts cannot be retrieved |
+| **Entitlement Import: Permissions** | ❌         | -                               |                                                              |
 
 ## Getting started
 
@@ -86,6 +86,10 @@ The account reference is populated with the property `id` property from _WinkWav
 ### Correlation on `userName`
 
 The correlation for this connector is based on the `userName` since the `externalId` is not available.
+
+When filtering by username, no results are returned if the account is disabled (active: false). However, querying directly by id does return the account. This is problematic because, when creating a user, we first check whether an account already exists—regardless of whether it is enabled or disabled.
+
+As a result, a new account is always created, even if an inactive one already exists. This leads to issues with uniqueness constraints on email or username, which can eventually cause data pollution and trigger errors that will need to be resolved manually.
 
 ### Retrieving accounts based on `id`
 
