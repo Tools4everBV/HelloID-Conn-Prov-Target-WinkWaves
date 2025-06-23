@@ -32,8 +32,20 @@ function Resolve-WinkWavesError {
             }
         }
         try {
-            $errorDetailsMessage = ($httpErrorObj.ErrorDetails | ConvertFrom-Json).error
-            $httpErrorObj.FriendlyMessage = $errorDetailsObject
+            $errorDetailsMessage = ($httpErrorObj.ErrorDetails | ConvertFrom-Json)
+            if ($null -ne $errorDetailsMessage.details) {
+                $errorDetailsMessage = ($httpErrorObj.ErrorDetails | ConvertFrom-Json)
+                $messages = [System.Collections.Generic.List[string]]::new()
+                foreach ($key in $errorDetailsMessage.details.PSObject.Properties.Name) {
+                    $value = $errorDetailsMessage.details."$key"
+                    if ($value.errors) {
+                        $messages.Add($value.errors)
+                    }
+                }
+                $httpErrorObj.FriendlyMessage = ($messages | ConvertTo-Json)
+            } else {
+                $httpErrorObj.FriendlyMessage = $errorDetailsObject
+            }
         } catch {
             $httpErrorObj.FriendlyMessage = "Error: [$($errorDetailsMessage)] [$($_.Exception.Message)]"
         }
@@ -51,15 +63,7 @@ try {
     # Set headers
     $headers = [System.Collections.Generic.Dictionary[string, string]]::new()
     $headers.Add('Authorization', "Bearer $($actionContext.Configuration.Token)")
-    $splatCompareProperties = @{
-            ReferenceObject  = @($correlatedAccount.PSObject.Properties)
-            DifferenceObject = @(([PSCustomObject]$actionContext.Data).PSObject.Properties)
-        }
-        $propertiesChanged = Compare-Object @splatCompareProperties -PassThru | Where-Object { $_.SideIndicator -eq '=>' }
 
-    #$account = [PSCustomObject]$actionContext.Data.PsObject.Copy()
-    $actionContext.Data | Select-Object * -ExcludeProperty ExchangeOnline, passwordProfile, managerId
-    $Blocked = [System.Convert]::ToBoolean($actionContext.Data.Blocked)
     Write-Information 'Verifying if a WinkWaves account exists'
     try {
         $splatParams = @{
