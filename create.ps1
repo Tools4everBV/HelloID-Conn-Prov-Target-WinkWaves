@@ -65,6 +65,7 @@ function ConvertTo-HelloIDAccountObject {
         email       = ($Account.emails | Where-Object { $_.type -eq 'work' }).value
         active      = $Account.active
         id          = $Account.id
+        manager     = $Account."urn:ietf:params:scim:schemas:extension:enterprise:2.0:User".manager.value
     }
 
     Write-Output $obj
@@ -97,6 +98,19 @@ try {
             Headers = $headers
         }
         $response = Invoke-RestMethod @splatGetParams
+
+    }
+
+    if ($outputContext.data.PSObject.Properties.Name -Contains 'manager') {
+        if (-not ([string]::IsNullOrEmpty($actionContext.References.ManagerAccount))) {
+            $actionContext.data | Add-Member @{ manager = "$($actionContext.References.ManagerAccount)" } -Force
+        }
+        else {
+            Write-Warning "Manager reference is missing, skipped setting manager"
+        }
+    }
+    else {
+        Write-Warning "Mapping of [manager] is missing to set the manager."
     }
 
     if ($response.Resources.Count -eq 0) {
@@ -111,10 +125,11 @@ try {
     # Process
     switch ($action) {
         'CreateAccount' {
-            $splatCreateParams = @{
-                Uri    = "$($actionContext.Configuration.BaseUrl)/scim/v2/Users"
-                Method = 'POST'
-                Body   = @{
+            $body = [ordered]@{
+                    schemas    = @(
+                        'urn:ietf:params:scim:schemas:core:2.0:User',
+                        'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User'
+                    )   
                     userName    = $actionContext.Data.userName
                     displayName = $actionContext.Data.displayName
                     active      = 'false'
@@ -123,9 +138,19 @@ try {
                         type    = 'work'
                         value   = $actionContext.Data.email
                     })
+                    'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User' = @{
+                        manager = $actionContext.data.manager
+                    }
                 } | ConvertTo-Json
+
+            $utf8Bytes = [System.Text.Encoding]::UTF8.GetBytes($body)
+
+            $splatCreateParams = @{
+                Uri    = "$($actionContext.Configuration.BaseUrl)/scim/v2/Users"
+                Method = 'POST'
+                Body   = $utf8Bytes
                 Headers = $headers
-                ContentType = 'application/scim+json'
+                ContentType = 'application/scim+json; charset=utf-8'
             }
 
             if (-not($actionContext.DryRun -eq $true)) {

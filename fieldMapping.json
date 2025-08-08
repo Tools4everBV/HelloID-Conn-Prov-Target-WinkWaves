@@ -51,6 +51,23 @@
           "StoreInAccountData": false
         }
       ]
+    },
+    {
+      "Name": "manager",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "None",
+          "Value": "\"\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
     }
   ],
   "UniqueFieldNames": []
